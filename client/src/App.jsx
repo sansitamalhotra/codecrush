@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import ProblemSolver from './pages/ProblemSolver'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
+import Settings from './pages/Settings'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/problem/:id" element={<ProblemSolver />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </Router>
     </AuthProvider>
