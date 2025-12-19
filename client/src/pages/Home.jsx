@@ -155,9 +155,11 @@ function Home() {
                         transition={{ delay: 0.5, duration: 0.6 }}
                         className="text-2xl md:text-3xl text-[#005B96] mb-12 max-w-4xl mx-auto leading-relaxed"
                     >
-                        A cute, gamified way to master coding interviews.
+                        LeetCode tests your ability. CodeCrush builds it.
                         <br />
-                        Learn at your pace. Feel supported. Make progress ✨
+                        <span className="text-xl text-[#6497B1]">
+                            Start here. Graduate to LeetCode when you're ready.
+                        </span>
                     </motion.p>
 
                     {/* CTA Button */}
@@ -243,13 +245,15 @@ function Home() {
                         </h2>
 
                         <p className="text-xl text-[#005B96] leading-relaxed text-center mb-6">
-                            CodeCrush was built to make technical interview prep less intimidating and more engaging. We believe learning should be fun, not stressful.
+                            Most people open LeetCode, do 3 problems, feel stupid, and quit.
+                            CodeCrush fixes that dropout point. We're the bridge between "I'm scared of interviews"
+                            and "I can grind LeetCode."
                         </p>
 
                         <p className="text-xl text-[#005B96] leading-relaxed text-center">
-                            Through gamification, progress tracking, and our friendly mascot companion, we help students master data structures and algorithms at their own pace.
+                            Through gamification, spaced repetition, and a judgment-free environment,
+                            we help you build confidence before testing it.
                         </p>
-
                         {/* Stats */}
                         <div className="grid grid-cols-3 gap-8 mt-16">
                             {[

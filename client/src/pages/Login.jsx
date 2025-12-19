@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../firebase/config'
+import { auth, db } from '../firebase/config'
 import { useNavigate } from 'react-router-dom'
+import { doc, getDoc } from 'firebase/firestore'
 
 function Login() {
     const [isSignUp, setIsSignUp] = useState(false)
@@ -19,14 +20,25 @@ function Login() {
 
         try {
             if (isSignUp) {
-                // Sign up
-                await createUserWithEmailAndPassword(auth, email, password)
+                // Sign up - create new account
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+                // New users always go to onboarding
+                navigate('/onboarding')
             } else {
-                // Log in
-                await signInWithEmailAndPassword(auth, email, password)
+                // Log in - check if profile exists
+                const userCredential = await signInWithEmailAndPassword(auth, email, password)
+
+                // Check if user has completed onboarding
+                const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid))
+
+                if (userDoc.exists()) {
+                    // Profile exists - go to dashboard
+                    navigate('/dashboard')
+                } else {
+                    // No profile - go to onboarding
+                    navigate('/onboarding')
+                }
             }
-            // Redirect to dashboard on success
-            navigate('/dashboard')
         } catch (err) {
             setError(err.message)
         } finally {

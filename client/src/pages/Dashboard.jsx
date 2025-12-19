@@ -1,14 +1,40 @@
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../firebase/config'
+import { useState, useEffect } from 'react'
 
 function Dashboard() {
-    const { logout } = useAuth()
+    const { logout, currentUser } = useAuth()
     const navigate = useNavigate()
+    const [userData, setUserData] = useState(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const loadUserData = async () => {
+            if (currentUser) {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid))
+                if (userDoc.exists()) {
+                    setUserData(userDoc.data())
+                }
+                setLoading(false)
+            }
+        }
+        loadUserData()
+    }, [currentUser])
 
     const handleLogout = async () => {
         await logout()
         navigate('/login')
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#E8F4F8] via-[#B3CDE0] to-[#9FB7D4] flex items-center justify-center">
+                <div className="text-4xl">Loading...</div>
+            </div>
+        )
     }
 
     return (
@@ -107,20 +133,24 @@ function Dashboard() {
 
                     <div>
                         <h1 className="text-4xl font-bold text-[#03396C] mb-2">
-                            Welcome back, Coder! 👋
+                            Welcome back,{userData?.name || 'Coder'}! 👋
                         </h1>
                         <p className="text-[#005B96] mb-3 text-lg">
-                            7-day streak! You're crushing it! 💪
+                            {userData?.streak || 0}-day streak! {userData?.streak > 0 ? "You're crushing it! 💪" : "Start your streak today! 💪"}
                         </p>
                         <div className="flex gap-3">
-                            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">Level 5</span>
-                            <span className="px-4 py-2 bg-[#B3CDE0] text-[#03396C] rounded-full text-sm font-medium">23 Solved</span>
+                            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                Level {userData?.level || 1}
+                            </span>
+                            <span className="px-4 py-2 bg-[#B3CDE0] text-[#03396C] rounded-full text-sm font-medium">
+                                {userData?.totalSolved || 0} Solved
+                            </span>
                         </div>
                     </div>
                 </motion.div>
 
                 {/* STATS CARDS */}
-                <div className="grid md:grid-cols-3 gap-6 mb-12">
+                < div className="grid md:grid-cols-3 gap-6 mb-12">
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -130,7 +160,7 @@ function Dashboard() {
                         className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-white"
                     >
                         <div className="text-5xl mb-3">🌱</div>
-                        <div className="text-4xl font-bold text-[#6497B1] mb-2">7 Days</div>
+                        <div className="text-4xl font-bold text-[#6497B1] mb-2">{userData?.streak || 0} Days</div>
                         <div className="text-[#005B96] font-medium">Current Streak 🔥</div>
                         <div className="mt-2 text-sm text-[#6497B1]">Keep it going!</div>
                     </motion.div>
@@ -143,7 +173,7 @@ function Dashboard() {
                         className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-white"
                     >
                         <div className="text-5xl mb-3">✅</div>
-                        <div className="text-4xl font-bold text-[#6497B1] mb-2">23</div>
+                        <div className="text-4xl font-bold text-[#6497B1] mb-2">{userData?.totalSolved || 0}</div>
                         <div className="text-[#005B96] font-medium">Problems Solved</div>
                     </motion.div>
 
@@ -155,11 +185,10 @@ function Dashboard() {
                         className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-white"
                     >
                         <div className="text-5xl mb-3">⭐</div>
-                        <div className="text-4xl font-bold text-[#6497B1] mb-2">Level 5</div>
+                        <div className="text-4xl font-bold text-[#6497B1] mb-2">Level {userData?.level || 1}</div>
                         <div className="text-[#005B96] font-medium">Keep it up!</div>
                     </motion.div>
                 </div>
-
                 {/* PROBLEMS SECTION */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -224,7 +253,7 @@ function Dashboard() {
                     </div>
                 </motion.div>
             </div>
-        </div>
+        </div >
     )
 }
 
