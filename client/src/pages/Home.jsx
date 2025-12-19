@@ -1,372 +1,288 @@
-import { TypeAnimation } from 'react-type-animation'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import Mascot from '../components/Mascot'
 
 function Home() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#E8F4F8] via-[#B3CDE0] to-[#9FB7D4]">
-
-            {/* FLOATING BACKGROUND ELEMENTS */}
+            {/* Animated background blobs */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    className="absolute top-20 left-10 w-96 h-96 bg-[#6497B1] rounded-full mix-blend-multiply filter blur-xl opacity-20"
-                    animate={{
-                        x: [0, 100, 0],
-                        y: [0, -100, 0],
-                    }}
-                    transition={{
-                        duration: 20,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
+                    className="absolute top-20 left-10 w-96 h-96 bg-[#6497B1] rounded-full mix-blend-multiply filter blur-xl opacity-15"
+                    animate={{ x: [0, 100, 0], y: [0, -100, 0] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
-                    className="absolute top-40 right-10 w-96 h-96 bg-[#B3CDE0] rounded-full mix-blend-multiply filter blur-xl opacity-20"
-                    animate={{
-                        x: [0, -100, 0],
-                        y: [0, 100, 0],
-                    }}
-                    transition={{
-                        duration: 15,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                />
-                <motion.div
-                    className="absolute bottom-20 left-1/3 w-96 h-96 bg-[#9FB7D4] rounded-full mix-blend-multiply filter blur-xl opacity-20"
-                    animate={{
-                        x: [0, 50, 0],
-                        y: [0, -50, 0],
-                    }}
-                    transition={{
-                        duration: 18,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
+                    className="absolute bottom-20 right-10 w-96 h-96 bg-[#B3CDE0] rounded-full mix-blend-multiply filter blur-xl opacity-15"
+                    animate={{ x: [0, -100, 0], y: [0, 100, 0] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
                 />
             </div>
 
-            {/* NAVIGATION */}
-            <motion.nav
-                initial={{ y: -100 }}
-                animate={{ y: 0 }}
-                className="sticky top-0 z-50 backdrop-blur-lg bg-white/70 shadow-sm"
-            >
+            {/* Navigation */}
+            <nav className="relative backdrop-blur-lg bg-white/70 shadow-sm">
                 <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
-                    <div className="text-2xl font-bold text-[#03396C]">
-                        CodeCrush
-                    </div>
+                    <div className="text-2xl font-bold text-[#03396C]">CodeCrush</div>
 
-                    <div className="hidden md:flex gap-8 text-sm font-medium text-[#005B96]">
+                    <div className="flex gap-6 text-sm font-medium items-center">
+                        <a href="#home" className="text-[#005B96] hover:text-[#03396C] transition-colors">Home</a>
+                        <a href="#features" className="text-[#005B96] hover:text-[#03396C] transition-colors">Features</a>
+                        <a href="#about" className="text-[#005B96] hover:text-[#03396C] transition-colors">About</a>
+                        <Link to="/login">
+                            <button className="px-6 py-2 bg-[#6497B1] text-white rounded-full hover:bg-[#005B96] transition-colors">
+                                Login
+                            </button>
+                        </Link>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Hero Section */}
+            <section id="home" className="relative max-w-7xl mx-auto px-8 py-20">
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    {/* Left: Text */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <h1 className="text-6xl font-bold text-[#03396C] mb-6 leading-tight">
+                            Welcome to <span className="text-[#6497B1]">CodeCrush</span>...!
+                        </h1>
+                        <p className="text-2xl text-[#005B96] mb-8 leading-relaxed">
+                            <span className="font-bold">LeetCode tests your ability.</span><br />
+                            <span className="font-bold text-[#6497B1]">CodeCrush builds it.</span>
+                        </p>
+                        <p className="text-lg text-[#6497B1] mb-8">
+                            Master coding interviews through gamified learning. Track streaks, earn XP, level up, and crush problems at your own pace.
+                        </p>
+
+                        <div className="flex gap-4">
+                            <Link to="/signup">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-8 py-4 bg-gradient-to-r from-[#6497B1] to-[#005B96] text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
+                                    style={{ imageRendering: 'pixelated' }}
+                                >
+                                    Start Crushing! 🚀
+                                </motion.button>
+                            </Link>
+
+                            <a href="#features">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-8 py-4 border-2 border-[#6497B1] text-[#6497B1] rounded-xl font-bold text-lg hover:bg-[#E8F4F8] transition-all"
+                                    style={{ imageRendering: 'pixelated' }}
+                                >
+                                    Learn More
+                                </motion.button>
+                            </a>
+                        </div>
+                    </motion.div>
+
+                    {/* Right: Mascot */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        className="flex justify-center"
+                    >
+                        <div className="relative">
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-[#6497B1] to-[#B3CDE0] rounded-full blur-3xl opacity-30"
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                            />
+                            <Mascot state="excited" size="xlarge" message="Let's code together! 💪" />
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section id="features" className="relative max-w-7xl mx-auto px-8 py-20">
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true }}
+                    className="text-center mb-16"
+                >
+                    <h2 className="text-5xl font-bold text-[#03396C] mb-4">Why CodeCrush?</h2>
+                    <p className="text-xl text-[#6497B1]">Built for pre-LeetCode learners who need confidence</p>
+                </motion.div>
+
+                <div className="grid md:grid-cols-3 gap-8">
+                    {[
+                        {
+                            icon: '🎮',
+                            title: 'Gamified Learning',
+                            description: 'Track streaks, earn XP, level up. Stay motivated with game mechanics that make coding addictive.'
+                        },
+                        {
+                            icon: '💡',
+                            title: 'Smart Hints',
+                            description: 'Progressive hint system that guides you without giving away the solution. Learn to think like a pro.'
+                        },
+                        {
+                            icon: '🎯',
+                            title: 'Personalized Path',
+                            description: 'Problems matched to your skill level. Start from true beginner and progress at your own pace.'
+                        },
+                        {
+                            icon: '📊',
+                            title: 'Track Progress',
+                            description: 'Visual stats, heatmaps, and achievements. See your growth in real-time.'
+                        },
+                        {
+                            icon: '🔥',
+                            title: 'Build Streaks',
+                            description: 'Daily challenges keep you consistent. Build the habit that leads to interview success.'
+                        },
+                        {
+                            icon: '📝',
+                            title: 'Personal Notes',
+                            description: 'Bookmark problems, add notes, use Think Mode. Make it your own learning space.'
+                        }
+                    ].map((feature, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            viewport={{ once: true }}
+                            whileHover={{ scale: 1.05, y: -10 }}
+                            className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-xl border border-white"
+                            style={{ imageRendering: 'pixelated' }}
+                        >
+                            <div className="text-5xl mb-4">{feature.icon}</div>
+                            <h3 className="text-2xl font-bold text-[#03396C] mb-3">{feature.title}</h3>
+                            <p className="text-[#6497B1]">{feature.description}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </section>
+
+            {/* About Section */}
+            <section id="about" className="relative max-w-7xl mx-auto px-8 py-20">
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true }}
+                    className="bg-white/80 backdrop-blur-lg p-12 rounded-3xl shadow-xl border border-white"
+                >
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h2 className="text-4xl font-bold text-[#03396C] mb-6">Our Mission</h2>
+                            <p className="text-lg text-[#6497B1] mb-4 leading-relaxed">
+                                CodeCrush was built for anxious learners who feel overwhelmed by LeetCode. We believe everyone deserves a chance to succeed in tech interviews.
+                            </p>
+                            <p className="text-lg text-[#6497B1] mb-4 leading-relaxed">
+                                Instead of throwing you into the deep end, we help you build confidence through:
+                            </p>
+                            <ul className="space-y-2 text-[#6497B1] mb-6">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span>Problems that match YOUR level</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span>Hints that teach, not just solve</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span>Gamification that keeps you coming back</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span>A supportive learning environment</span>
+                                </li>
+                            </ul>
+
+                            <Link to="/signup">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-8 py-4 bg-gradient-to-r from-[#6497B1] to-[#005B96] text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
+                                    style={{ imageRendering: 'pixelated' }}
+                                >
+                                    Join CodeCrush Today! 🎯
+                                </motion.button>
+                            </Link>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <Mascot state="happy" size="xlarge" message="You got this! 🌟" />
+                        </div>
+                    </div>
+                </motion.div>
+            </section>
+
+            {/* Stats Section */}
+            <section className="relative max-w-7xl mx-auto px-8 py-20">
+                <div className="grid md:grid-cols-3 gap-8 text-center">
+                    {[
+                        { number: '30+', label: 'Coding Problems' },
+                        { number: '4', label: 'Difficulty Levels' },
+                        { number: '∞', label: 'Learning Potential' }
+                    ].map((stat, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            viewport={{ once: true }}
+                            className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-xl border border-white"
+                        >
+                            <div className="text-6xl font-bold text-[#6497B1] mb-2">{stat.number}</div>
+                            <div className="text-xl text-[#03396C] font-medium">{stat.label}</div>
+                        </motion.div>
+                    ))}
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="relative max-w-7xl mx-auto px-8 py-20">
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true }}
+                    className="bg-gradient-to-r from-[#6497B1] to-[#005B96] p-12 rounded-3xl shadow-2xl text-center"
+                >
+                    <h2 className="text-5xl font-bold text-white mb-6">Ready to Start Your Journey?</h2>
+                    <p className="text-2xl text-white/90 mb-8">Join CodeCrush today and transform your coding skills!</p>
+
+                    <Link to="/signup">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-12 py-5 bg-white text-[#6497B1] rounded-xl font-bold text-xl shadow-xl hover:shadow-2xl transition-all"
+                            style={{ imageRendering: 'pixelated' }}
+                        >
+                            Get Started Free! 🚀
+                        </motion.button>
+                    </Link>
+                </motion.div>
+            </section>
+
+            {/* Footer */}
+            <footer className="relative max-w-7xl mx-auto px-8 py-12 border-t border-white/20">
+                <div className="text-center">
+                    <div className="text-2xl font-bold text-[#03396C] mb-4">CodeCrush</div>
+                    <p className="text-[#6497B1] mb-4">Building confidence, one problem at a time.</p>
+                    <div className="flex justify-center gap-6 text-sm text-[#6497B1]">
                         <a href="#home" className="hover:text-[#03396C] transition-colors">Home</a>
                         <a href="#features" className="hover:text-[#03396C] transition-colors">Features</a>
                         <a href="#about" className="hover:text-[#03396C] transition-colors">About</a>
-                        <a href="#faq" className="hover:text-[#03396C] transition-colors">FAQ</a>
+                        <Link to="/dashboard" className="hover:text-[#03396C] transition-colors">Dashboard</Link>
                     </div>
-
-                    <div className="flex gap-4 text-sm font-medium">
-                        <a href="/dashboard">
-                            <button className="px-4 py-2 text-[#005B96] hover:text-[#03396C] transition-colors">
-                                Dashboard
-                            </button>
-                        </a>
-                        <a href="/login">
-                            <button className="px-6 py-2 bg-[#6497B1] text-white rounded-full hover:bg-[#005B96] hover:shadow-lg transition-all hover:scale-105">
-                                Login
-                            </button>
-                        </a>
-                    </div>
-                </div>
-            </motion.nav>
-
-            {/* HERO SECTION */}
-            <section id="home" className="relative min-h-screen flex items-center justify-center px-8 py-20">
-                <div className="max-w-6xl mx-auto text-center">
-
-                    {/* Typing Animation */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        <TypeAnimation
-                            sequence={[
-                                'Welcome to CodeCrush...',
-                                1500,
-                                'Master coding interviews...',
-                                1500,
-                                'No stress. Just progress.',
-                                1500,
-                            ]}
-                            wrapper="div"
-                            speed={50}
-                            className="text-3xl md:text-4xl font-medium text-[#6497B1] mb-12"
-                            repeat={Infinity}
-                        />
-                    </motion.div>
-
-                    {/* HUGE Mascot */}
-                    <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ duration: 0.8, type: "spring" }}
-                        className="relative inline-block mb-12"
-                    >
-                        <motion.div
-                            className="absolute inset-0 bg-[#6497B1] rounded-full blur-3xl opacity-20"
-                            animate={{
-                                scale: [1, 1.2, 1],
-                                opacity: [0.2, 0.3, 0.2]
-                            }}
-                            transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                        />
-                        <motion.div
-                            animate={{
-                                y: [0, -20, 0]
-                            }}
-                            transition={{
-                                duration: 4,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                            className="relative w-96 h-96 md:w-[32rem] md:h-[32rem] mx-auto bg-white/50 rounded-3xl flex items-center justify-center text-9xl shadow-2xl"
-                        >
-                            🐹
-                        </motion.div>
-                    </motion.div>
-
-                    {/* HUGE Title */}
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.6 }}
-                        className="text-8xl md:text-9xl font-bold mb-8 text-[#03396C]"
-                    >
-                        CodeCrush
-                    </motion.h1>
-
-                    {/* Subtitle */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5, duration: 0.6 }}
-                        className="text-2xl md:text-3xl text-[#005B96] mb-12 max-w-4xl mx-auto leading-relaxed"
-                    >
-                        LeetCode tests your ability. CodeCrush builds it.
-                        <br />
-                        <span className="text-xl text-[#6497B1]">
-                            Start here. Graduate to LeetCode when you're ready.
-                        </span>
-                    </motion.p>
-
-                    {/* CTA Button */}
-                    <motion.a
-                        href="/login"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7, duration: 0.6 }}
-                    >
-                        <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-14 py-6 bg-[#6497B1] text-white text-xl font-semibold rounded-full shadow-xl hover:bg-[#005B96] transition-colors"
-                        >
-                            Start Learning 🚀
-                        </motion.button>
-                    </motion.a>
-
-                    {/* Scroll Indicator */}
-                    <motion.div
-                        animate={{ y: [0, 10, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="mt-20"
-                    >
-                        <a href="#features" className="text-6xl text-[#6497B1] hover:text-[#005B96] transition-colors">
-                            ↓
-                        </a>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* FEATURES SECTION */}
-            <section id="features" className="relative py-32 px-8">
-                <div className="max-w-7xl mx-auto">
-
-                    <motion.h2
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="text-5xl md:text-6xl font-bold text-center mb-20 text-[#03396C]"
-                    >
-                        Why CodeCrush?
-                    </motion.h2>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {[
-                            { icon: '🎮', title: 'Gamified Learning', desc: 'Level up as you solve problems. Earn achievements and compete with friends!' },
-                            { icon: '📊', title: 'Track Progress', desc: 'Visualize your improvement with detailed stats and streak tracking.' },
-                            { icon: '🌱', title: 'Grow Your Skills', desc: 'Master data structures and algorithms through spaced repetition.' }
-                        ].map((feature, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 50 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.2, duration: 0.6 }}
-                                whileHover={{ y: -10, boxShadow: "0 25px 50px rgba(0,0,0,0.1)" }}
-                                className="bg-white/80 backdrop-blur-lg p-10 rounded-3xl shadow-xl border border-white"
-                            >
-                                <div className="text-6xl mb-6">{feature.icon}</div>
-                                <h3 className="text-2xl font-bold mb-4 text-[#03396C]">{feature.title}</h3>
-                                <p className="text-[#005B96] leading-relaxed">{feature.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ABOUT SECTION */}
-            <section id="about" className="relative py-32 px-8 bg-white/30">
-                <div className="max-w-5xl mx-auto">
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="bg-white/80 backdrop-blur-lg p-16 rounded-3xl shadow-2xl"
-                    >
-                        <h2 className="text-5xl font-bold text-center mb-8 text-[#03396C]">
-                            Our Mission
-                        </h2>
-
-                        <p className="text-xl text-[#005B96] leading-relaxed text-center mb-6">
-                            Most people open LeetCode, do 3 problems, feel stupid, and quit.
-                            CodeCrush fixes that dropout point. We're the bridge between "I'm scared of interviews"
-                            and "I can grind LeetCode."
-                        </p>
-
-                        <p className="text-xl text-[#005B96] leading-relaxed text-center">
-                            Through gamification, spaced repetition, and a judgment-free environment,
-                            we help you build confidence before testing it.
-                        </p>
-                        {/* Stats */}
-                        <div className="grid grid-cols-3 gap-8 mt-16">
-                            {[
-                                { num: '500+', label: 'Active Users' },
-                                { num: '1000+', label: 'Problems Solved' },
-                                { num: '95%', label: 'Success Rate' }
-                            ].map((stat, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ scale: 0 }}
-                                    whileInView={{ scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.1, type: "spring" }}
-                                    className="text-center"
-                                >
-                                    <div className="text-5xl font-bold text-[#6497B1] mb-2">
-                                        {stat.num}
-                                    </div>
-                                    <div className="text-[#005B96]">{stat.label}</div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* FAQ SECTION */}
-            <section id="faq" className="relative py-32 px-8">
-                <div className="max-w-4xl mx-auto">
-
-                    <motion.h2
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-5xl font-bold text-center mb-16 text-[#03396C]"
-                    >
-                        Frequently Asked Questions
-                    </motion.h2>
-
-                    <div className="space-y-6">
-                        {[
-                            { q: 'Is CodeCrush free to use?', a: 'Yes! CodeCrush is completely free for students preparing for technical interviews.' },
-                            { q: 'What topics are covered?', a: 'We cover all major data structures and algorithms: arrays, strings, trees, graphs, dynamic programming, sorting, searching, and more!' },
-                            { q: 'How does the spaced repetition work?', a: 'Our algorithm tracks which problems you struggle with and brings them back at optimal intervals to maximize retention.' },
-                            { q: 'Who created CodeCrush?', a: 'CodeCrush was built by a student who understands the struggle of interview prep. While applying for internships, why not make practice fun? Born from real need, built for real students.' }
-                        ].map((faq, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, x: -50 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.1 }}
-                                whileHover={{ scale: 1.02 }}
-                                className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-white"
-                            >
-                                <h3 className="text-xl font-bold mb-3 text-[#03396C]">{faq.q}</h3>
-                                <p className="text-[#005B96] leading-relaxed">{faq.a}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* FOOTER */}
-            <footer className="relative py-12 px-8 bg-[#03396C]">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-3 gap-12 mb-8">
-                        <div>
-                            <h3 className="text-2xl font-bold text-white mb-4">CodeCrush</h3>
-                            <p className="text-[#B3CDE0]">Making interview prep fun, one problem at a time.</p>
-                        </div>
-
-                        <div>
-                            <h3 className="text-lg font-bold text-white mb-4">Quick Links</h3>
-                            <div className="space-y-2">
-                                {['Home', 'Features', 'About', 'FAQ'].map((link, i) => (
-                                    <div key={i}>
-                                        <a href={`#${link.toLowerCase()}`} className="text-[#B3CDE0] hover:text-white transition-colors">
-                                            {link}
-                                        </a>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="text-lg font-bold text-white mb-4">Connect</h3>
-                            <div className="space-y-2 text-[#B3CDE0]">
-                                <div>
-                                    <a href="mailto:malhotrasansita@gmail.com" className="hover:text-white transition-colors">
-                                        📧 malhotrasansita@gmail.com
-                                    </a>
-                                </div>
-                                <div>
-                                    <a href="https://github.com/sansitamalhotra" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                                        🐙 github.com/sansitamalhotra
-                                    </a>
-                                </div>
-                                <div>
-                                    <a href="https://linkedin.com/in/sansitamalhotra" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                                        💼 linkedin.com/in/sansitamalhotra
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-[#6497B1] pt-8 text-center text-[#B3CDE0]">
-                        © 2025 CodeCrush. Built with ❤️ by Sansa
-                    </div>
+                    <p className="text-sm text-[#6497B1] mt-6">© 2025 CodeCrush. Built with 💙 for learners.</p>
                 </div>
             </footer>
-
         </div>
     )
 }

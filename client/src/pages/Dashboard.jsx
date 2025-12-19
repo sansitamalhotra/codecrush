@@ -1,12 +1,13 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useState, useEffect } from 'react'
-import { problemsDB } from '../data/problems'
+import { problemsDB } from '../data/problems.jsx'
 import { calculateLevel, getXPForNextLevel, getXPProgress } from '../utils/streakUtils'
 import { Analytics } from '@vercel/analytics/react'
+import Mascot from '../components/Mascot'
 
 function Dashboard() {
     const { logout, currentUser } = useAuth()
@@ -15,6 +16,12 @@ function Dashboard() {
     const [loading, setLoading] = useState(true)
     const [dailyProgress, setDailyProgress] = useState(0)
     const [showLevelUp, setShowLevelUp] = useState(false)
+
+    // FILTERS STATE
+    const [filterDifficulty, setFilterDifficulty] = useState('all')
+    const [filterCategory, setFilterCategory] = useState('all')
+    const [filterStatus, setFilterStatus] = useState('all')
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         const loadUserData = async () => {
@@ -101,54 +108,66 @@ function Dashboard() {
     }
 
     const getProblemsForUser = () => {
-        const userLevel = userData?.codingLevel || 'beginner'
         const solved = userData?.solvedProblems || []
+        let allProblems = Object.values(problemsDB)
 
-        const difficultyMap = {
-            'true-beginner': 'True Beginner',
-            'beginner': 'Beginner',
-            'intermediate': 'Intermediate',
-            'advanced': 'Advanced'
+        // Apply difficulty filter
+        if (filterDifficulty !== 'all') {
+            allProblems = allProblems.filter(p => p.difficulty === filterDifficulty)
         }
 
-        const targetDifficulty = difficultyMap[userLevel]
-
-        const unsolvedProblems = Object.values(problemsDB).filter(p =>
-            p.difficulty === targetDifficulty && !solved.includes(p.id)
-        )
-
-        if (unsolvedProblems.length === 0) {
-            const levels = ['True Beginner', 'Beginner', 'Intermediate', 'Advanced']
-            const currentIndex = levels.indexOf(targetDifficulty)
-            const nextDifficulty = levels[currentIndex + 1] || targetDifficulty
-
-            return Object.values(problemsDB).filter(p =>
-                p.difficulty === nextDifficulty && !solved.includes(p.id)
-            ).slice(0, 3)
+        // Apply category filter
+        if (filterCategory !== 'all') {
+            allProblems = allProblems.filter(p => p.category === filterCategory)
         }
 
-        return unsolvedProblems.sort(() => Math.random() - 0.5).slice(0, 3)
+        // Apply status filter
+        if (filterStatus === 'solved') {
+            allProblems = allProblems.filter(p => solved.includes(p.id))
+        } else if (filterStatus === 'unsolved') {
+            allProblems = allProblems.filter(p => !solved.includes(p.id))
+        }
+
+        // Apply search query
+        if (searchQuery) {
+            allProblems = allProblems.filter(p =>
+                p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.category.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        }
+
+        // If no filters applied, show default 3 problems at user's level
+        if (filterDifficulty === 'all' && filterCategory === 'all' && filterStatus === 'all' && !searchQuery) {
+            const userLevel = userData?.codingLevel || 'beginner'
+            const difficultyMap = {
+                'true-beginner': 'True Beginner',
+                'beginner': 'Beginner',
+                'intermediate': 'Intermediate',
+                'advanced': 'Advanced'
+            }
+            const targetDifficulty = difficultyMap[userLevel]
+            const unsolvedProblems = allProblems.filter(p =>
+                p.difficulty === targetDifficulty && !solved.includes(p.id)
+            )
+
+            if (unsolvedProblems.length === 0) {
+                const levels = ['True Beginner', 'Beginner', 'Intermediate', 'Advanced']
+                const currentIndex = levels.indexOf(targetDifficulty)
+                const nextDifficulty = levels[currentIndex + 1] || targetDifficulty
+
+                return allProblems.filter(p =>
+                    p.difficulty === nextDifficulty && !solved.includes(p.id)
+                ).slice(0, 3)
+            }
+
+            return unsolvedProblems.sort(() => Math.random() - 0.5).slice(0, 3)
+        }
+
+        return allProblems
     }
 
-    const getMascotEmoji = () => {
-        const streak = userData?.streak || 0
-        if (streak === 0) return '🐹'
-        if (streak >= 1 && streak < 3) return '😊'
-        if (streak >= 3 && streak < 7) return '🔥'
-        if (streak >= 7 && streak < 30) return '⚡'
-        if (streak >= 30) return '👑'
-        return '🐹'
-    }
-
-    const getMascotMessage = () => {
-        const streak = userData?.streak || 0
-        if (streak === 0) return "Let's start a streak! 💪"
-        if (streak >= 1 && streak < 3) return `${streak} day streak! 🎉`
-        if (streak >= 3 && streak < 7) return `${streak} days! On fire! 🔥`
-        if (streak >= 7 && streak < 30) return `${streak} days! Unstoppable! ⚡`
-        if (streak >= 30) return `${streak} days! LEGEND! 👑`
-        return "Keep going! 💪"
-    }
+    // Get unique categories
+    const categories = [...new Set(Object.values(problemsDB).map(p => p.category))]
 
     if (loading) {
         return (
@@ -158,7 +177,7 @@ function Dashboard() {
         )
     }
 
-    const todaysProblems = getProblemsForUser()
+    const filteredProblems = getProblemsForUser()
     const xpProgress = getXPProgress(userData?.xp || 0)
     const xpNeeded = getXPForNextLevel(userData?.xp || 0)
 
@@ -166,30 +185,32 @@ function Dashboard() {
         <div className="min-h-screen bg-gradient-to-br from-[#E8F4F8] via-[#B3CDE0] to-[#9FB7D4]">
             <Analytics />
 
-            {/* Level Up Animation - FIXED POSITIONING */}
-            {showLevelUp && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm"
-                >
+            {/* Level Up Animation */}
+            <AnimatePresence>
+                {showLevelUp && (
                     <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1 }}
-                        className="text-9xl mb-8"
-                        style={{ imageRendering: 'pixelated' }}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm"
                     >
-                        ⭐
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1 }}
+                            className="text-9xl mb-8"
+                            style={{ imageRendering: 'pixelated' }}
+                        >
+                            ⭐
+                        </motion.div>
+                        <div className="text-5xl font-bold text-white mb-2">
+                            Level {userData?.level}!
+                        </div>
+                        <div className="text-2xl text-white/80">
+                            Keep crushing it! 🎉
+                        </div>
                     </motion.div>
-                    <div className="text-5xl font-bold text-white mb-2">
-                        Level {userData?.level}!
-                    </div>
-                    <div className="text-2xl text-white/80">
-                        Keep crushing it! 🎉
-                    </div>
-                </motion.div>
-            )}
+                )}
+            </AnimatePresence>
 
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <motion.div
@@ -204,17 +225,20 @@ function Dashboard() {
                 />
             </div>
 
-            {/* UPDATED NAV WITH HOME BUTTON */}
+            {/* Navigation */}
             <nav className="sticky top-0 z-50 backdrop-blur-lg bg-white/70 shadow-sm">
                 <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
-                    <a href="/" className="text-2xl font-bold text-[#03396C] hover:text-[#005B96] transition-colors">
+                    <Link to="/" className="text-2xl font-bold text-[#03396C] hover:text-[#005B96] transition-colors">
                         CodeCrush
-                    </a>
+                    </Link>
 
                     <div className="flex gap-6 text-sm font-medium items-center">
-                        <a href="/" className="text-[#005B96] hover:text-[#03396C] transition-colors">Home</a>
-                        <a href="/dashboard" className="text-[#03396C] font-bold">Dashboard</a>
-                        <a href="/settings" className="text-[#005B96] hover:text-[#03396C] transition-colors">Settings</a>
+                        <Link to="/" className="text-[#005B96] hover:text-[#03396C] transition-colors">Home</Link>
+                        <Link to="/dashboard" className="text-[#03396C] font-bold">Dashboard</Link>
+                        <Link to="/stats" className="text-[#005B96] hover:text-[#03396C] transition-colors">Stats</Link>
+                        <Link to="/bookmarks" className="text-[#005B96] hover:text-[#03396C] transition-colors">Bookmarks</Link>
+                        <Link to="/settings" className="text-[#005B96] hover:text-[#03396C] transition-colors">Settings</Link>
+                        <Link to="/achievements" className="text-[#005B96] hover:text-[#03396C] transition-colors">Achievements</Link>
                         <button onClick={handleLogout} className="px-4 py-2 bg-[#6497B1] text-white rounded-full hover:bg-[#005B96] transition-colors">
                             Log Out
                         </button>
@@ -224,50 +248,29 @@ function Dashboard() {
 
             <div className="relative container mx-auto px-8 py-12 max-w-7xl">
 
-                {/* Welcome Section with REACTIVE MASCOT */}
+                {/* Welcome Section with MASCOT */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-8 mb-12 bg-white/80 backdrop-blur-lg p-8 rounded-3xl shadow-xl border border-white"
                 >
-                    {/* MASCOT WITH REACTIONS */}
-                    <div className="relative">
-                        <motion.div
-                            className="absolute inset-0 bg-[#6497B1] rounded-full blur-2xl opacity-20"
-                            animate={{
-                                scale: userData?.streak >= 7 ? [1, 1.3, 1] : [1, 1.2, 1],
-                                opacity: userData?.streak >= 7 ? [0.2, 0.4, 0.2] : [0.2, 0.3, 0.2]
-                            }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                        />
-
-                        <motion.div
-                            animate={{
-                                y: userData?.streak >= 7 ? [0, -20, 0] : userData?.streak > 0 ? [0, -10, 0] : [0, -5, 0],
-                                rotate: userData?.streak >= 30 ? [0, 15, -15, 0] : userData?.streak >= 7 ? [0, 10, -10, 0] : [0, 5, -5, 0]
-                            }}
-                            transition={{
-                                duration: userData?.streak >= 30 ? 1.5 : userData?.streak >= 7 ? 2 : 4,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                            className="relative w-40 h-40 bg-white/50 rounded-3xl flex items-center justify-center text-8xl shadow-lg"
-                            style={{ imageRendering: 'pixelated' }}
-                        >
-                            {getMascotEmoji()}
-                        </motion.div>
-
-                        {/* Dynamic message bubble - PIXELATED */}
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.3, type: "spring" }}
-                            className="absolute -top-6 -right-6 bg-white px-4 py-2 rounded-full shadow-lg text-sm font-medium text-[#03396C]"
-                            style={{ imageRendering: 'pixelated' }}
-                        >
-                            {getMascotMessage()}
-                        </motion.div>
-                    </div>
+                    <Mascot
+                        state={
+                            userData?.streak === 0 ? 'thinking' :
+                                userData?.streak >= 30 ? 'onFire' :
+                                    userData?.streak >= 7 ? 'superHappy' :
+                                        userData?.streak >= 3 ? 'excited' :
+                                            'happy'
+                        }
+                        size="large"
+                        message={
+                            userData?.streak === 0 ? "Let's start a streak! 💪" :
+                                userData?.streak >= 30 ? `${userData.streak} days! LEGEND! 👑` :
+                                    userData?.streak >= 7 ? `${userData.streak} days! Unstoppable! ⚡` :
+                                        userData?.streak >= 3 ? `${userData.streak} days! On fire! 🔥` :
+                                            `${userData.streak} day streak! 🎉`
+                        }
+                    />
 
                     <div className="flex-1">
                         <h1 className="text-4xl font-bold text-[#03396C] mb-2">
@@ -318,7 +321,7 @@ function Dashboard() {
                     </div>
                 </motion.div>
 
-                {/* Stats Cards - PIXELATED */}
+                {/* Stats Cards */}
                 <div className="grid md:grid-cols-3 gap-6 mb-12">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -363,23 +366,112 @@ function Dashboard() {
                     </motion.div>
                 </div>
 
-                {/* Problems Section */}
+                {/* FILTERS SECTION */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
+                    className="bg-white/80 backdrop-blur-lg p-6 rounded-2xl shadow-lg mb-8"
+                >
+                    <h2 className="text-2xl font-bold text-[#03396C] mb-6">🔍 Find Problems</h2>
+
+                    <div className="grid md:grid-cols-4 gap-4 mb-4">
+                        {/* Difficulty Filter */}
+                        <div>
+                            <label className="block text-sm font-medium text-[#03396C] mb-2">Difficulty</label>
+                            <select
+                                value={filterDifficulty}
+                                onChange={(e) => setFilterDifficulty(e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-[#E8F4F8] rounded-lg focus:border-[#6497B1] focus:outline-none"
+                            >
+                                <option value="all">All Difficulties</option>
+                                <option value="True Beginner">True Beginner</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+
+                        {/* Category Filter */}
+                        <div>
+                            <label className="block text-sm font-medium text-[#03396C] mb-2">Category</label>
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-[#E8F4F8] rounded-lg focus:border-[#6497B1] focus:outline-none"
+                            >
+                                <option value="all">All Categories</option>
+                                {categories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Status Filter */}
+                        <div>
+                            <label className="block text-sm font-medium text-[#03396C] mb-2">Status</label>
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-[#E8F4F8] rounded-lg focus:border-[#6497B1] focus:outline-none"
+                            >
+                                <option value="all">All Problems</option>
+                                <option value="solved">Solved</option>
+                                <option value="unsolved">Unsolved</option>
+                            </select>
+                        </div>
+
+                        {/* Search */}
+                        <div>
+                            <label className="block text-sm font-medium text-[#03396C] mb-2">Search</label>
+                            <input
+                                type="text"
+                                placeholder="Search problems..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-[#E8F4F8] rounded-lg focus:border-[#6497B1] focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Clear Filters */}
+                    {(filterDifficulty !== 'all' || filterCategory !== 'all' || filterStatus !== 'all' || searchQuery) && (
+                        <button
+                            onClick={() => {
+                                setFilterDifficulty('all')
+                                setFilterCategory('all')
+                                setFilterStatus('all')
+                                setSearchQuery('')
+                            }}
+                            className="text-sm text-[#6497B1] hover:text-[#005B96] font-medium"
+                        >
+                            Clear All Filters
+                        </button>
+                    )}
+                </motion.div>
+
+                {/* Problems Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
                     className="bg-white/80 backdrop-blur-lg p-10 rounded-3xl shadow-xl border border-white"
                 >
-                    <h2 className="text-3xl font-bold text-[#03396C] mb-8">Today's Problems 🎯</h2>
-                    {todaysProblems.length === 0 ? (
+                    <h2 className="text-3xl font-bold text-[#03396C] mb-8">
+                        {filterDifficulty === 'all' && filterCategory === 'all' && filterStatus === 'all' && !searchQuery
+                            ? "Today's Problems 🎯"
+                            : `Filtered Problems (${filteredProblems.length})`}
+                    </h2>
+
+                    {filteredProblems.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4" style={{ imageRendering: 'pixelated' }}>🎉</div>
-                            <h3 className="text-2xl font-bold text-[#03396C] mb-2">Amazing work!</h3>
-                            <p className="text-[#6497B1]">You've completed all problems at your level!</p>
+                            <div className="text-6xl mb-4" style={{ imageRendering: 'pixelated' }}>🔍</div>
+                            <h3 className="text-2xl font-bold text-[#03396C] mb-2">No problems found!</h3>
+                            <p className="text-[#6497B1]">Try adjusting your filters</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {todaysProblems.map((problem, index) => (
+                            {filteredProblems.map((problem, index) => (
                                 <motion.div
                                     key={problem.id}
                                     initial={{ opacity: 0, y: 20 }}
@@ -392,11 +484,17 @@ function Dashboard() {
                                         <h3 className="font-bold text-lg text-[#03396C]">{problem.title}</h3>
                                         <p className="text-sm text-[#6497B1]">{problem.difficulty} • {problem.category}</p>
                                     </div>
-                                    <a href={`/problem/${problem.id}`}>
-                                        <button className="px-6 py-3 bg-[#6497B1] text-white rounded-lg hover:bg-[#005B96] transition-colors font-medium">
+                                    <div className="flex items-center gap-3">
+                                        {userData?.solvedProblems?.includes(problem.id) && (
+                                            <span className="text-green-500 font-bold">✓ Solved</span>
+                                        )}
+                                        <button
+                                            onClick={() => navigate(`/problem/${problem.id}`)}
+                                            className="px-6 py-3 bg-[#6497B1] text-white rounded-lg hover:bg-[#005B96] transition-colors font-medium"
+                                        >
                                             Solve →
                                         </button>
-                                    </a>
+                                    </div>
                                 </motion.div>
                             ))}
                         </div>

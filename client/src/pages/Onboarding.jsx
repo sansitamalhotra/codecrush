@@ -1,55 +1,85 @@
+import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import Mascot from '../components/Mascot'
 
 function Onboarding() {
+    const navigate = useNavigate()
+    const { signup } = useAuth()
     const [step, setStep] = useState(1)
+    const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         name: '',
-        codingLevel: '',
-        goal: '',
-        dailyGoal: ''
+        email: '',
+        password: '',
+        codingLevel: 'beginner',
+        dailyGoal: '1'
     })
-    const [loading, setLoading] = useState(false)
-    const { currentUser } = useAuth()
-    const navigate = useNavigate()
+
+    const handleNext = () => {
+        if (step === 1 && !formData.name) {
+            alert('Please enter your name')
+            return
+        }
+        if (step === 2 && (!formData.email || !formData.password)) {
+            alert('Please enter email and password')
+            return
+        }
+        if (step < 4) {
+            setStep(step + 1)
+        }
+    }
+
+    const handleBack = () => {
+        if (step > 1) {
+            setStep(step - 1)
+        }
+    }
 
     const handleSubmit = async () => {
         setLoading(true)
 
         try {
-            await setDoc(doc(db, 'users', currentUser.uid), {
+            // Create user in Firebase Auth
+            const userCredential = await signup(formData.email, formData.password)
+
+            // Create user document in Firestore with ALL fields
+            await setDoc(doc(db, 'users', userCredential.user.uid), {
                 name: formData.name,
-                email: currentUser.email,
+                email: formData.email,
                 codingLevel: formData.codingLevel,
-                goal: formData.goal,
                 dailyGoal: formData.dailyGoal,
                 createdAt: new Date(),
+
+                // Stats & Progress
                 streak: 0,
                 totalSolved: 0,
-                level: 1,
+                solvedProblems: [],
                 xp: 0,
-                solvedProblems: []
+                level: 1,
+                lastLoginDate: new Date(),
+                solvedToday: {},
+
+                // Phase 5: Learning Tools
+                bookmarkedProblems: [],
+                problemNotes: {},
+                thinkMode: false
             })
 
             navigate('/dashboard')
         } catch (error) {
-            console.error('Error saving profile:', error)
-            alert('Error saving profile. Please try again.')
-        } finally {
-            setLoading(false)
+            alert(error.message)
         }
+
+        setLoading(false)
     }
 
-    const nextStep = () => setStep(step + 1)
-    const prevStep = () => setStep(step - 1)
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E8F4F8] via-[#B3CDE0] to-[#9FB7D4] flex items-center justify-center px-8 py-12">
-
+        <div className="min-h-screen bg-gradient-to-br from-[#E8F4F8] via-[#B3CDE0] to-[#9FB7D4] flex items-center justify-center p-8">
+            {/* Animated background blobs */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <motion.div
                     className="absolute top-20 left-10 w-96 h-96 bg-[#6497B1] rounded-full mix-blend-multiply filter blur-xl opacity-20"
@@ -66,161 +96,187 @@ function Onboarding() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-12 max-w-2xl w-full border border-white"
+                className="relative bg-white/90 backdrop-blur-lg p-10 rounded-3xl shadow-2xl max-w-md w-full border border-white"
             >
+                {/* Progress bar */}
                 <div className="mb-8">
                     <div className="flex justify-between mb-2">
-                        {[1, 2, 3, 4].map((i) => (
+                        {[1, 2, 3, 4].map((s) => (
                             <div
-                                key={i}
-                                className={`w-1/4 h-2 rounded-full mx-1 transition-colors ${i <= step ? 'bg-[#6497B1]' : 'bg-gray-200'}`}
+                                key={s}
+                                className={`w-1/4 h-2 rounded-full mx-1 transition-all ${s <= step ? 'bg-[#6497B1]' : 'bg-gray-200'
+                                    }`}
                             />
                         ))}
                     </div>
                     <p className="text-sm text-[#6497B1] text-center">Step {step} of 4</p>
                 </div>
 
-                {/* STEP 1: Name */}
-                {step === 1 && (
-                    <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
-                        <div className="text-center mb-8">
-                            <div className="text-8xl mb-4">👋</div>
-                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">Welcome to CodeCrush!</h2>
-                            <p className="text-[#6497B1]">Let's personalize your experience</p>
-                        </div>
+                <AnimatePresence mode="wait">
+                    {/* Step 1: Name */}
+                    {step === 1 && (
+                        <motion.div
+                            key="step1"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                        >
+                            <div className="flex justify-center mb-6">
+                                <Mascot state="excited" size="medium" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">Welcome! 👋</h2>
+                            <p className="text-[#6497B1] mb-6">Let's get you started on your coding journey</p>
 
-                        <div>
-                            <label className="block text-lg font-medium text-[#03396C] mb-3">What should we call you?</label>
                             <input
                                 type="text"
+                                placeholder="What's your name?"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                onKeyPress={(e) => e.key === 'Enter' && formData.name && nextStep()}
-                                className="w-full px-6 py-4 bg-[#E8F4F8] border border-[#B3CDE0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6497B1] text-[#03396C] text-lg"
-                                placeholder="Your name"
+                                onKeyPress={(e) => e.key === 'Enter' && handleNext()}
+                                className="w-full px-4 py-3 border-2 border-[#E8F4F8] rounded-xl focus:border-[#6497B1] focus:outline-none text-lg"
+                                autoFocus
                             />
-                        </div>
+                        </motion.div>
+                    )}
 
+                    {/* Step 2: Email & Password */}
+                    {step === 2 && (
+                        <motion.div
+                            key="step2"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                        >
+                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">Create Account 🔐</h2>
+                            <p className="text-[#6497B1] mb-6">We'll keep your progress safe</p>
+
+                            <div className="space-y-4">
+                                <input
+                                    type="email"
+                                    placeholder="Email address"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-[#E8F4F8] rounded-xl focus:border-[#6497B1] focus:outline-none"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password (min 6 characters)"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-[#E8F4F8] rounded-xl focus:border-[#6497B1] focus:outline-none"
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Step 3: Coding Level */}
+                    {step === 3 && (
+                        <motion.div
+                            key="step3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                        >
+                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">Your Level 📊</h2>
+                            <p className="text-[#6497B1] mb-6">We'll match you with the right problems</p>
+
+                            <div className="space-y-3">
+                                {[
+                                    { value: 'true-beginner', label: 'True Beginner', desc: 'Just starting out' },
+                                    { value: 'beginner', label: 'Beginner', desc: 'Know basic syntax' },
+                                    { value: 'intermediate', label: 'Intermediate', desc: 'Comfortable with DSA' },
+                                    { value: 'advanced', label: 'Advanced', desc: 'Ready for hard problems' }
+                                ].map((level) => (
+                                    <button
+                                        key={level.value}
+                                        onClick={() => setFormData({ ...formData, codingLevel: level.value })}
+                                        className={`w-full p-4 rounded-xl border-2 text-left transition-all ${formData.codingLevel === level.value
+                                                ? 'border-[#6497B1] bg-[#E8F4F8]'
+                                                : 'border-gray-200 hover:border-[#B3CDE0]'
+                                            }`}
+                                    >
+                                        <div className="font-bold text-[#03396C]">{level.label}</div>
+                                        <div className="text-sm text-[#6497B1]">{level.desc}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Step 4: Daily Goal */}
+                    {step === 4 && (
+                        <motion.div
+                            key="step4"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                        >
+                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">Daily Goal 🎯</h2>
+                            <p className="text-[#6497B1] mb-6">Consistency is key!</p>
+
+                            <div className="space-y-3">
+                                {[
+                                    { value: '1', label: '1 problem/day', desc: 'Perfect for beginners' },
+                                    { value: '2', label: '2 problems/day', desc: 'Build momentum' },
+                                    { value: '3', label: '3 problems/day', desc: 'Serious learner' },
+                                    { value: '5', label: '5+ problems/day', desc: 'Interview prep mode' }
+                                ].map((goal) => (
+                                    <button
+                                        key={goal.value}
+                                        onClick={() => setFormData({ ...formData, dailyGoal: goal.value })}
+                                        className={`w-full p-4 rounded-xl border-2 text-left transition-all ${formData.dailyGoal === goal.value
+                                                ? 'border-[#6497B1] bg-[#E8F4F8]'
+                                                : 'border-gray-200 hover:border-[#B3CDE0]'
+                                            }`}
+                                    >
+                                        <div className="font-bold text-[#03396C]">{goal.label}</div>
+                                        <div className="text-sm text-[#6497B1]">{goal.desc}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Navigation buttons */}
+                <div className="flex gap-3 mt-8">
+                    {step > 1 && (
                         <button
-                            type="button"
-                            onClick={nextStep}
-                            disabled={!formData.name}
-                            className="w-full mt-8 py-4 bg-[#6497B1] text-white rounded-xl font-bold text-lg hover:bg-[#005B96] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            onClick={handleBack}
+                            className="flex-1 px-6 py-3 border-2 border-[#6497B1] text-[#6497B1] rounded-xl hover:bg-[#E8F4F8] transition-all font-medium"
+                        >
+                            Back
+                        </button>
+                    )}
+
+                    {step < 4 ? (
+                        <button
+                            onClick={handleNext}
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-[#6497B1] to-[#005B96] text-white rounded-xl hover:shadow-lg transition-all font-medium"
                         >
                             Next →
                         </button>
-                    </motion.div>
-                )}
+                    ) : (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-[#6497B1] to-[#005B96] text-white rounded-xl hover:shadow-lg transition-all font-medium disabled:opacity-50"
+                        >
+                            {loading ? 'Creating...' : 'Start Coding! 🚀'}
+                        </button>
+                    )}
+                </div>
 
-                {/* STEP 2: Coding Level */}
-                {step === 2 && (
-                    <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
-                        <div className="text-center mb-8">
-                            <div className="text-8xl mb-4">💻</div>
-                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">What's your coding level?</h2>
-                            <p className="text-[#6497B1]">Be honest - we'll match you with the right problems!</p>
-                        </div>
-
-                        <div className="space-y-4">
-                            {[
-                                { value: 'true-beginner', label: 'True Beginner', desc: 'Just learning to code' },
-                                { value: 'beginner', label: 'Beginner', desc: 'Know basics, new to DSA' },
-                                { value: 'intermediate', label: 'Intermediate', desc: 'Comfortable with DSA concepts' },
-                                { value: 'advanced', label: 'Advanced', desc: 'Strong DSA, prepping for FAANG' }
-                            ].map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, codingLevel: option.value })}
-                                    className={`w-full p-6 rounded-xl border-2 text-left transition-all ${formData.codingLevel === option.value ? 'border-[#6497B1] bg-[#E8F4F8]' : 'border-[#B3CDE0] hover:border-[#6497B1]'}`}
-                                >
-                                    <div className="font-bold text-lg text-[#03396C]">{option.label}</div>
-                                    <div className="text-sm text-[#6497B1]">{option.desc}</div>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex gap-4 mt-8">
-                            <button type="button" onClick={prevStep} className="w-1/3 py-4 bg-white text-[#03396C] rounded-xl font-bold border-2 border-[#B3CDE0] hover:bg-[#E8F4F8] transition-colors">← Back</button>
-                            <button type="button" onClick={nextStep} disabled={!formData.codingLevel} className="w-2/3 py-4 bg-[#6497B1] text-white rounded-xl font-bold text-lg hover:bg-[#005B96] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">Next →</button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* STEP 3: Goal */}
-                {step === 3 && (
-                    <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
-                        <div className="text-center mb-8">
-                            <div className="text-8xl mb-4">🎯</div>
-                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">What are you preparing for?</h2>
-                            <p className="text-[#6497B1]">We'll customize your learning path</p>
-                        </div>
-
-                        <div className="space-y-4">
-                            {[
-                                { value: 'internship', label: 'Internship', emoji: '🎓' },
-                                { value: 'new-grad', label: 'New Grad Role', emoji: '💼' },
-                                { value: 'career-switch', label: 'Career Switch', emoji: '🔄' },
-                                { value: 'just-learning', label: 'Just Learning', emoji: '📚' }
-                            ].map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, goal: option.value })}
-                                    className={`w-full p-6 rounded-xl border-2 text-left transition-all flex items-center gap-4 ${formData.goal === option.value ? 'border-[#6497B1] bg-[#E8F4F8]' : 'border-[#B3CDE0] hover:border-[#6497B1]'}`}
-                                >
-                                    <div className="text-4xl">{option.emoji}</div>
-                                    <div className="font-bold text-lg text-[#03396C]">{option.label}</div>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex gap-4 mt-8">
-                            <button type="button" onClick={prevStep} className="w-1/3 py-4 bg-white text-[#03396C] rounded-xl font-bold border-2 border-[#B3CDE0] hover:bg-[#E8F4F8] transition-colors">← Back</button>
-                            <button type="button" onClick={nextStep} disabled={!formData.goal} className="w-2/3 py-4 bg-[#6497B1] text-white rounded-xl font-bold text-lg hover:bg-[#005B96] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">Next →</button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* STEP 4: Daily Goal */}
-                {step === 4 && (
-                    <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
-                        <div className="text-center mb-8">
-                            <div className="text-8xl mb-4">⏰</div>
-                            <h2 className="text-3xl font-bold text-[#03396C] mb-2">Daily practice goal</h2>
-                            <p className="text-[#6497B1]">How many problems per day?</p>
-                        </div>
-
-                        <div className="space-y-4">
-                            {[
-                                { value: '1', label: '1 problem/day', desc: 'Light & consistent' },
-                                { value: '2', label: '2 problems/day', desc: 'Steady progress' },
-                                { value: '3', label: '3 problems/day', desc: 'Serious prep' },
-                                { value: '5', label: '5+ problems/day', desc: 'Grind mode 🔥' }
-                            ].map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, dailyGoal: option.value })}
-                                    className={`w-full p-6 rounded-xl border-2 text-left transition-all ${formData.dailyGoal === option.value ? 'border-[#6497B1] bg-[#E8F4F8]' : 'border-[#B3CDE0] hover:border-[#6497B1]'}`}
-                                >
-                                    <div className="font-bold text-lg text-[#03396C]">{option.label}</div>
-                                    <div className="text-sm text-[#6497B1]">{option.desc}</div>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex gap-4 mt-8">
-                            <button type="button" onClick={prevStep} className="w-1/3 py-4 bg-white text-[#03396C] rounded-xl font-bold border-2 border-[#B3CDE0] hover:bg-[#E8F4F8] transition-colors">← Back</button>
-                            <button type="button" onClick={handleSubmit} disabled={!formData.dailyGoal || loading} className="w-2/3 py-4 bg-[#6497B1] text-white rounded-xl font-bold text-lg hover:bg-[#005B96] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-                                {loading ? 'Saving...' : "Let's Go! 🚀"}
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
+                {/* Login link */}
+                <p className="text-center text-sm text-[#6497B1] mt-6">
+                    Already have an account?{' '}
+                    <a href="/login" className="font-bold text-[#03396C] hover:underline">
+                        Log in
+                    </a>
+                </p>
             </motion.div>
         </div>
     )
 }
 
-export default Onboarding
+export default Onboarding   
