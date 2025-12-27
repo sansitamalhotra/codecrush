@@ -15,9 +15,15 @@ export const runTestCases = (code, testCases, language = 'javascript') => {
                 }
                 const functionName = functionMatch[1]
 
-                // Execute code and get function
-                eval(code)
-                const fn = eval(functionName)
+                // Create a function that returns the user's function
+                // This wraps the code and returns the function object
+                const wrappedCode = `
+                    ${code}
+                    return ${functionName};
+                `
+
+                // Execute and get the function
+                const fn = new Function(wrappedCode)()
 
                 // Run test case
                 output = fn(...testCase.input)
